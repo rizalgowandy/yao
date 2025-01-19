@@ -2,42 +2,37 @@ package model
 
 import (
 	"fmt"
-	"path/filepath"
+	"strings"
 
-	"github.com/yaoapp/gou"
-	"github.com/yaoapp/kun/log"
+	"github.com/yaoapp/gou/application"
+	"github.com/yaoapp/gou/model"
 	"github.com/yaoapp/yao/config"
 	"github.com/yaoapp/yao/share"
 )
 
 // Load 加载数据模型
 func Load(cfg config.Config) error {
-	if share.BUILDIN {
-		return LoadBuildIn("models", "")
-	}
-	return LoadFrom(filepath.Join(cfg.Root, "models"), "")
-}
 
-// LoadFrom 从特定目录加载
-func LoadFrom(dir string, prefix string) error {
+	messages := []string{}
 
-	if share.DirNotExists(dir) {
-		return fmt.Errorf("%s does not exists", dir)
-	}
+	model.WithCrypt([]byte(fmt.Sprintf(`{"key":"%s"}`, cfg.DB.AESKey)), "AES")
+	model.WithCrypt([]byte(`{}`), "PASSWORD")
 
-	err := share.Walk(dir, ".json", func(root, filename string) {
-		name := prefix + share.SpecName(root, filename)
-		content := share.ReadFile(filename)
-		_, err := gou.LoadModelReturn(string(content), name)
-		if err != nil {
-			log.With(log.F{"root": root, "file": filename}).Error(err.Error())
+	exts := []string{"*.mod.yao", "*.mod.json", "*.mod.jsonc"}
+	err := application.App.Walk("models", func(root, file string, isdir bool) error {
+		if isdir {
+			return nil
 		}
-	})
+		_, err := model.Load(file, share.ID(root, file))
+		if err != nil {
+			messages = append(messages, err.Error())
+		}
+		return err
+	}, exts...)
+
+	if len(messages) > 0 {
+		return fmt.Errorf(strings.Join(messages, ";\n"))
+	}
 
 	return err
-}
-
-// LoadBuildIn 从制品中读取
-func LoadBuildIn(dir string, prefix string) error {
-	return nil
 }

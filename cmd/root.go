@@ -7,16 +7,20 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/yaoapp/kun/exception"
+	"github.com/yaoapp/yao/cmd/sui"
 	"github.com/yaoapp/yao/config"
+	"github.com/yaoapp/yao/pack"
 	"github.com/yaoapp/yao/share"
 )
 
 var appPath string
-var envFile string
+var yazFile string
+var licenseKey string
 
 var lang = os.Getenv("YAO_LANG")
 var langs = map[string]string{
-	"Start Engine":                          "启动象传应用引擎",
+	"Start Engine":                          "启动 YAO 应用引擎",
+	"Get an application":                    "下载应用源码",
 	"One or more arguments are not correct": "参数错误",
 	"Application directory":                 "指定应用路径",
 	"Environment file":                      "指定环境变量文件",
@@ -32,6 +36,7 @@ var langs = map[string]string{
 	"API":                                   " API接口",
 	"API List":                              "API列表",
 	"Root":                                  "应用目录",
+	"Data":                                  "数据目录",
 	"Frontend":                              "前台地址",
 	"Dashboard":                             "管理后台",
 	"Not enough arguments":                  "参数错误: 缺少参数",
@@ -45,12 +50,22 @@ var langs = map[string]string{
 	"NEXT:":                                 "下一步:",
 	"Listening":                             "    监听",
 	"✨LISTENING✨":                           "✨服务正在运行✨",
+	"✨STOPPED✨":                             "✨服务已停止✨",
 	"SessionPort":                           "会话服务端口",
 	"Force migrate":                         "强制更新数据表结构",
 	"Migrate is not allowed on production mode.": "Migrate 不能再生产环境下使用",
+	"Upgrade yao to latest version":              "升级 yao 到最新版本",
+	"🎉Current version is the latest🎉":            "🎉当前版本是最新的🎉",
+	"Do you want to update to %s ? (y/n): ":      "是否更新到 %s ? (y/n): ",
+	"Invalid input":                              "输入错误",
+	"Canceled upgrade":                           "已取消更新",
+	"Error occurred while updating binary: %s":   "更新二进制文件时出错: %s",
+	"🎉Successfully updated to version: %s🎉":      "🎉成功更新到版本: %s🎉",
+	"Print all version information":              "显示详细版本信息",
+	"SUI Template Engine":                        "SUI 模板引擎命令",
 }
 
-// L 多语言切换
+// L Language switch
 func L(words string) string {
 	if lang == "" {
 		return words
@@ -61,6 +76,9 @@ func L(words string) string {
 	}
 	return words
 }
+
+// RootCmd export the rootCmd to support customized commands when use yao as lib
+var RootCmd = rootCmd
 
 var rootCmd = &cobra.Command{
 	Use:   share.BUILDNAME,
@@ -82,23 +100,67 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-// 加载命令
+var studioCmd = &cobra.Command{
+	Use:   "studio",
+	Short: "Yao Studio CLI",
+	Long:  `Yao Studio CLI`,
+	Args:  cobra.MinimumNArgs(1),
+	CompletionOptions: cobra.CompletionOptions{
+		DisableDefaultCmd: true,
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Fprintln(os.Stderr, L("One or more arguments are not correct"), args)
+		os.Exit(1)
+	},
+}
+
+var suiCmd = &cobra.Command{
+	Use:   "sui",
+	Short: L("SUI Template Engine"),
+	Long:  L("SUI Template Engine"),
+	Args:  cobra.MinimumNArgs(1),
+	CompletionOptions: cobra.CompletionOptions{
+		DisableDefaultCmd: true,
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Fprintln(os.Stderr, L("One or more arguments are not correct"), args)
+		os.Exit(1)
+	},
+}
+
+// Command initialize
 func init() {
+
+	// studioCmd.AddCommand(studio.RunCmd)
+
+	// Sui
+	suiCmd.AddCommand(sui.WatchCmd)
+	suiCmd.AddCommand(sui.BuildCmd)
+	suiCmd.AddCommand(sui.TransCmd)
+
 	rootCmd.AddCommand(
 		versionCmd,
 		migrateCmd,
 		inspectCmd,
 		startCmd,
 		runCmd,
-		initCmd,
-		serviceCmd,
+		// getCmd,
+		// dumpCmd,
+		// restoreCmd,
+		// socketCmd,
+		// websocketCmd,
+		// packCmd,
+		// studioCmd,
+		suiCmd,
+		// upgradeCmd,
 	)
 	// rootCmd.SetHelpCommand(helpCmd)
 	rootCmd.PersistentFlags().StringVarP(&appPath, "app", "a", "", L("Application directory"))
-	rootCmd.PersistentFlags().StringVarP(&envFile, "env", "e", "", L("Environment file"))
+	rootCmd.PersistentFlags().StringVarP(&yazFile, "file", "f", "", L("Application package file"))
+	rootCmd.PersistentFlags().StringVarP(&licenseKey, "key", "k", "", L("Application license key"))
 }
 
-// Execute 运行Root
+// Execute Command
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -106,8 +168,9 @@ func Execute() {
 	}
 }
 
-// Boot 设定配置
+// Boot Setting
 func Boot() {
+
 	root := config.Conf.Root
 	if appPath != "" {
 		r, err := filepath.Abs(appPath)
@@ -116,15 +179,27 @@ func Boot() {
 		}
 		root = r
 	}
-	if envFile != "" {
-		config.Conf = config.LoadFrom(envFile)
-	} else {
-		config.Conf = config.LoadFrom(filepath.Join(root, ".env"))
+
+	config.Conf = config.LoadFrom(filepath.Join(root, ".env"))
+
+	if share.BUILDIN {
+		os.Setenv("YAO_APP_SOURCE", "::binary")
+		config.Conf.AppSource = "::binary"
+	}
+
+	if yazFile != "" {
+		os.Setenv("YAO_APP_SOURCE", yazFile)
+		config.Conf.AppSource = yazFile
 	}
 
 	if config.Conf.Mode == "production" {
 		config.Production()
 	} else if config.Conf.Mode == "development" {
 		config.Development()
+	}
+
+	// set license
+	if licenseKey != "" {
+		pack.SetCipher(licenseKey)
 	}
 }

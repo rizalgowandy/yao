@@ -3,95 +3,80 @@
 [![UnitTest](https://github.com/YaoApp/yao/actions/workflows/unit-test.yml/badge.svg)](https://github.com/YaoApp/yao/actions/workflows/unit-test.yml)
 [![codecov](https://codecov.io/gh/YaoApp/yao/branch/main/graph/badge.svg?token=294Y05U71J)](https://codecov.io/gh/YaoApp/yao)
 
-![intro](docs/1.intro.png)
-
-Yao 是一款支持快速创建 Web 服务和管理后台的开源低代码应用引擎。
+https://github.com/YaoApp/yao/assets/1842210/6b23ac89-ef6e-4c24-874f-753a98370dec
 
 [English](README.md)
+
+YAO 是一款开源应用引擎，使用 Golang 编写，以一个命令行工具的形式存在, 下载即用。适合用于开发业务系统、网站/APP API 接口、管理后台、自建低代码平台等。
+
+YAO 采用 flow-based 的编程模式，通过编写 YAO DSL (JSON 格式逻辑描述) 或使用 JavaScript 编写处理器，实现各种功能。 YAO DSL 可以有多种编写方式:
+
+1. 纯手工编写
+
+2. 使用自动化脚本，根据上下文逻辑生成
+
+3. 使用可视化编辑器，通过“拖拉拽”制作
 
 官网: [https://yaoapps.com](https://yaoapps.com)
 
 文档: [https://yaoapps.com/doc](https://yaoapps.com/doc)
 
+## 最新版本下载安装 (推荐)
+
+https://github.com/YaoApp/xgen-dev-app
+
 ## 演示
 
-### 客户管理系统
+![界面](docs/yao-setup-demo.jpg)
 
-使用 Yao 搭建的一套通用 CRM 管理系统。
+使用 YAO 开发的应用
 
-[https://demo-crm.yaoapps.com](https://demo-crm.yaoapps.com/xiang/login/admin?autoLogin=true)
-
-### 智能仓库管理系统
-
-使用 Yao 搭建的云+边物联网应用，支持人脸识别、RFID 的无人值守智能仓库管理系统。
-
-[https://demo-wms.yaoapps.com](https://demo-crm.yaoapps.com/xiang/login/admin?autoLogin=true)
+| 应用                 | 简介                         | 代码仓库                                |
+| -------------------- | ---------------------------- | --------------------------------------- |
+| yaoapp/yao-examples  | Yao 应用示例                 | https://github.com/YaoApp/yao-examples  |
+| yaoapp/yao-knowledge | ChatGPT 驱动的知识管理库应用 | https://github.com/YaoApp/yao-knowledge |
+| yaoapp/xgen-dev-app  | 演示应用 (演示)              | https://github.com/YaoApp/xgen-dev-app  |
+| yaoapp/demo-project  | 工程项目管理演示应用(演示)   | https://github.com/yaoapp/demo-project  |
+| yaoapp/demo-finance  | 财务管理演示应用(演示)       | https://github.com/yaoapp/demo-finance  |
+| yaoapp/demo-plm      | 生产项目管理演示应用(演示)   | https://github.com/yaoapp/demo-plm      |
 
 ## 介绍
 
-Yao 是一个只需使用 JSON 即可创建数据库模型、编写 API 接口、描述管理后台界面的低代码引擎，使用 Yao 构建的应用可运行在云端或物联网设备上。 开发者不需要写一行代码，就可以拥有 10 倍生产力。
+Yao 是一个只需使用 JSON 即可创建数据库模型、编写 API 接口、描述管理后台界面的应用引擎，使用 Yao 构建的应用可运行在云端或物联网设备上。 开发者不需要写一行代码，就可以拥有 10 倍生产力。
 
 Yao 基于 **flow-based** 编程思想，采用 **Go** 语言开发，支持多种方式扩展数据流处理器。这使得 Yao 具有极好的**通用性**，大部分场景下可以代替编程语言, 在复用性和编码效率上是传统编程语言的 **10 倍**；应用性能和资源占比上优于 **PHP**, **JAVA** 等语言。
 
 Yao 内置了一套数据管理系统，通过编写 **JSON** 描述界面布局，即可实现 90% 常见界面交互功能，特别适合快速制作各类管理后台、CRM、ERP 等企业内部系统。对于特殊交互功能亦可通过编写扩展组件或 HTML 页面的方式实现。内置管理系统与 Yao 并不耦合，亦可采用 **VUE**, **React** 等任意前端技术实现管理界面。
 
-## Install
+## 安装
 
-在终端下运行脚本: ( MacOS / Linux )
+Yao v0.10.4 使用说明
 
-```bash
-curl -fsSL https://website.yaoapps.com/install.sh | bash
-```
-
-Windows 用户请参考安装调试章节: [安装调试](https://yaoapps.com/doc/a.介绍/b.安装调试)
+https://github.com/YaoApp/xgen-dev-app/blob/main/README.zh-CN.md
 
 ## 入门指南
 
-### Step 1: 创建项目
+详细说明请看[文档](https://yaoapps.com/doc/%E4%BB%8B%E7%BB%8D/%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97)
 
-新建一个项目目录，进入项目目录，运行 `yao init` 命令，创建一个空白的 Yao 应用。
+### 创建应用
 
-```bash
-mkdir -p /data/crm  # 创建项目目录
-cd /data/crm  # 进入项目目录
-yao init # 运行初始化程序
-```
+#### 新建一个空白应用
 
-命令运行成功后，将创建 `app.json文件` , `db`, `ui` , `data` 等目录
+新建一个应用目录，进入应用目录，运行 `yao start` 命令, 启动安装界面。
 
 ```bash
-├── data        # 用于存放应用产生的文件，如图片,PDF等
-├── db          # 用于存放 SQLite 数据库文件
-│   └── yao.db
-└── ui          # 静态文件服务器文件目录，可以放置自定义前端制品，该目录下文件可通过 http://host:port/文件名称 访问。
-└── app.json    # 应用配置文件, 用来定义应用名称等
+mkdir -p /data/app  # 创建应用目录
+cd /data/app  # 进入应用目录
+yao start # 启动安装界面
 ```
 
-### Step 2: Create the data table
+**默认账号**
 
-使用 `yao migrate` 命令创建数据表，打开命令行终端，**在项目根录下运行**:
+- 用户名: **xiang@iqka.com**
 
-```bash
-yao migrate
-```
+- 密码: **A123456p+**
 
-初始化菜单
-
-```bash
-yao run flows.setmenu
-```
-
-### Step 3: Start the service
-
-打开命令行终端，**在项目根录下运行**:
-
-```bash
-yao start
-```
-
-1. 打开浏览器, 访问 `https://127.0.0.1:5099/xiang/login/admin`，
-
-2. 输入默认用户名: `xiang@iqka.com`， 密码: `A123456p+`
+![安装界面](docs/yao-setup-step2.jpg)
 
 ## 关于 Yao
 

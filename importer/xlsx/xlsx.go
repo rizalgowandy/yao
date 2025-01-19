@@ -36,17 +36,18 @@ func Open(filename string) *Xlsx {
 		exception.New("读取表格行失败 %s %s", 400, sheetName, err.Error()).Throw()
 	}
 
-	if rows.TotalRows() > 100000 {
-		exception.New("数据表 %s 超过10万行 %d", 400, sheetName, rows.TotalRows()).Throw()
-	}
+	// if rows.TotalRows() > 100000 {
+	// 	exception.New("数据表 %s 超过10万行 %d", 400, sheetName, rows.TotalRows()).Throw()
+	// }
 
 	cols, err := file.Cols(sheetName)
 	if err != nil {
 		exception.New("读取表格列信息失败 %s %s", 400, sheetName, err.Error()).Throw()
 	}
-	if cols.TotalCols() > 1000 {
-		exception.New("数据表 %s 超过1000列 %d", 400, sheetName, cols.TotalCols()).Throw()
-	}
+
+	// if cols.TotalCols() > 1000 {
+	// 	exception.New("数据表 %s 超过1000列 %d", 400, sheetName, cols.TotalCols()).Throw()
+	// }
 
 	return &Xlsx{File: file, Rows: rows, Cols: cols, SheetName: sheetName, SheetIndex: sheetIndex}
 }
@@ -95,7 +96,7 @@ func (xlsx *Xlsx) Chunk(size int, axises []string, cb func(line int, data [][]in
 		row, end := xlsx.readLine(line, axises)
 		if end {
 			cb(line, data)
-			break
+			return
 		}
 
 		data = append(data, row)

@@ -1,63 +1,84 @@
 package service
 
 import (
-	"github.com/yaoapp/gou"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/yaoapp/gou/api"
+	"github.com/yaoapp/gou/server/http"
 	"github.com/yaoapp/yao/config"
+	"github.com/yaoapp/yao/neo"
 	"github.com/yaoapp/yao/share"
 )
 
-var shutdown = make(chan bool)
-var shutdownComplete = make(chan bool)
+// Start the yao service
+func Start(cfg config.Config) (*http.Server, error) {
 
-// Start 启动服务
-func Start() {
-
-	if config.Conf.Session.Hosting && config.Conf.Session.IsCLI == false {
-		share.SessionServerStart()
+	if cfg.AllowFrom == nil {
+		cfg.AllowFrom = []string{}
 	}
 
-	gou.SetHTTPGuards(Guards)
-	gou.ServeHTTP(
-		gou.Server{
-			Host: config.Conf.Host,
-			Port: config.Conf.Port,
-			Root: "/api",
-		},
-		&shutdown, func(s gou.Server) {
-			shutdownComplete <- true
-		},
-		Middlewares...)
+	err := prepare()
+	if err != nil {
+		return nil, err
+	}
+
+	router := gin.New()
+	router.Use(Middlewares...)
+	api.SetGuards(Guards)
+	api.SetRoutes(router, "/api", cfg.AllowFrom...)
+	srv := http.New(router, http.Option{
+		Host:    cfg.Host,
+		Port:    cfg.Port,
+		Root:    "/api",
+		Allows:  cfg.AllowFrom,
+		Timeout: 5 * time.Second,
+	})
+
+	// Neo API
+	if neo.Neo != nil {
+		neo.Neo.API(router, "/api/__yao/neo")
+	}
+
+	go func() {
+		err = srv.Start()
+	}()
+
+	return srv, nil
 }
 
-// StartWithouttSession 启动服务
-func StartWithouttSession() {
-
-	gou.SetHTTPGuards(Guards)
-	gou.ServeHTTP(
-		gou.Server{
-			Host: config.Conf.Host,
-			Port: config.Conf.Port,
-			Root: "/api",
-		},
-		&shutdown, func(s gou.Server) {
-			shutdownComplete <- true
-		},
-		Middlewares...)
+// Restart the yao service
+func Restart(srv *http.Server, cfg config.Config) error {
+	router := gin.New()
+	router.Use(Middlewares...)
+	api.SetGuards(Guards)
+	api.SetRoutes(router, "/api", cfg.AllowFrom...)
+	srv.Reset(router)
+	return srv.Restart()
 }
 
-// StopWithouttSession 关闭服务
-func StopWithouttSession(onComplete func()) {
-	shutdown <- true
-	<-shutdownComplete
-	gou.KillPlugins()
-	onComplete()
+// Stop the yao service
+func Stop(srv *http.Server) error {
+	err := srv.Stop()
+	if err != nil {
+		return err
+	}
+	<-srv.Event()
+	return nil
 }
 
-// Stop 关闭服务
-func Stop(onComplete func()) {
-	shutdown <- true
-	<-shutdownComplete
-	share.SessionServerStop()
-	gou.KillPlugins()
-	onComplete()
+func prepare() error {
+
+	// Session server
+	err := share.SessionStart()
+	if err != nil {
+		return err
+	}
+
+	err = SetupStatic()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

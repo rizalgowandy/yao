@@ -1,120 +1,64 @@
-name: Release MacOS
+name: Release MacOS Artifacts
 
 on:
   workflow_dispatch:
-    inputs:
-      tags:
-        description: "Version tags"
-  push:
-    branches: [main]
-    paths:
-      - "share/const.go"
 
 jobs:
   release:
-    strategy:
-      matrix:
-        go: [1.17]
-    runs-on: "macos-11"
+    runs-on: "macos-12"
+    timeout-minutes: 120
+
     steps:
-      - name: Install coscmd
-        run: sudo pip3 install coscmd
-
-      - name: Setup Cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Checkout Kun
-        uses: actions/checkout@v2
-        with:
-          repository: yaoapp/kun
-          path: kun
-
-      - name: Checkout Xun
-        uses: actions/checkout@v2
-        with:
-          repository: yaoapp/xun
-          path: xun
-
-      - name: Checkout Gou
-        uses: actions/checkout@v2
-        with:
-          repository: yaoapp/gou
-          path: gou
-          token: ${{ secrets.TOKEN }}
-
-      - name: Checkout V8Go
-        uses: actions/checkout@v2
-        with:
-          repository: rogchap/v8go
-          ref: 5e91d3d9dcabd2986f901b6b31590e49fc3c4dd8
-          path: v8go
-
-      - name: Checkout UI
-        uses: actions/checkout@v2
-        with:
-          repository: yaoapp/xgen
-          path: ui
-          token: ${{ secrets.TOKEN }}
-
-      - name: Move Kun, Xun, Gou, UI, V8Go
+      - name: Download latest artifacts
         run: |
-          mv kun ../
-          mv xun ../
-          mv gou ../
-          mv v8go ../
-          mv ui ../
-          ls -l .
-          ls -l ../
+          echo "Downloading latest artifacts..."
+          ARTIFACT_URL="https://api.github.com/repos/YaoApp/yao/actions/artifacts"
+          ARTIFACT_CONTENT=$(curl -s -H "Accept: application/vnd.github.v3+json" $ARTIFACT_URL)
+          echo $ARTIFACT_CONTENT
+          ARTIFACTS=$(echo $ARTIFACT_CONTENT | jq -r '.artifacts[] | select(.name | contains("yao-macos")) | .id')
+          for id in $ARTIFACTS; do
+              echo "https://api.github.com/repos/YaoApp/yao/actions/artifacts/$id/zip"
+              curl -L -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/YaoApp/yao/actions/artifacts/$id/zip" \
+              -o artifact.zip
+              unzip artifact.zip -d ./artifacts
+              rm artifact.zip
+              break
+          done
+          ls -l ./artifacts
 
-      - name: Checkout Code
-        uses: actions/checkout@v2
+    #   - name: Submit notarization request
+    #     run: |
+    #       echo "Submitting notarization request..."
+    #       UUID=$(xcrun altool --notarize-app --primary-bundle-id "com.example.yourapp" \
+    #         --username "your-apple-id" --password "app-specific-password" \
+    #         --file ./artifacts/your-binary-file)
 
-      - name: Setup Go ${{ matrix.go }}
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{ matrix.go }}
+    #       echo "Notarization UUID: $UUID"
+    #       echo "$UUID" > notarization_uuid.txt
 
-      - name: Setup Go Tools
-        run: |
-          if [[ "${GO111MODULE}" = "on" ]]; then go mod download; fi
-          if [[ "${GO111MODULE}" = "on" ]]; then export PATH="${GOPATH}/bin:${GOROOT}/bin:${PATH}"; fi
-          if [[ "${GO111MODULE}" = "on" ]]; then make tools; fi
-          go get github.com/go-bindata/go-bindata/...
-          go get github.com/elazarl/go-bindata-assetfs/...
+    #   - name: Check notarization status
+    #     id: check_notarization
+    #     timeout-minutes: 120
+    #     run: |
+    #       UUID=$(cat notarization_uuid.txt)
+    #       STATUS="in progress"
+    #       while [[ "$STATUS" == "in progress" ]]; do
+    #         STATUS=$(xcrun altool --notarization-info "$UUID" \
+    #           --username "your-apple-id" --password "app-specific-password")
+    #         echo "Notarization status: $STATUS"
+    #         if [[ "$STATUS" == *"success"* ]]; then
+    #           echo "::set-output name=status::success"
+    #           break
+    #         elif [[ "$STATUS" == *"invalid"* ]]; then
+    #           echo "::set-output name=status::failed"
+    #           break
+    #         fi
+    #       done
 
-      - name: Make Artifacts MacOS
-        run: |
-          make artifacts-macos
-
-      - name: Configure COS For Silicon Valley
-        env:
-          SECRET_ID: ${{ secrets.COS_ID }}
-          SECRET_KEY: ${{ secrets.COS_KEY }}
-          BUCKET: release-sv-1252011659
-          REGION: na-siliconvalley
-        run: |
-          coscmd config -a $SECRET_ID -s $SECRET_KEY -b $BUCKET -r $REGION
-
-      - name: Push To Silicon Valley
-        run: |
-          for file in ./dist/release/*; do coscmd upload $file /archives/; done;
-
-      - name: Configure COS For Beijing
-        env:
-          SECRET_ID: ${{ secrets.COS_ID }}
-          SECRET_KEY: ${{ secrets.COS_KEY }}
-          BUCKET: release-bj-1252011659
-          REGION: ap-beijing
-        run: |
-          coscmd config -a $SECRET_ID -s $SECRET_KEY -b $BUCKET -r $REGION
-
-      - name: Push To Beijing
-        run: |
-          for file in ./dist/release/*; do coscmd upload $file /archives/; done;
+    #   - name: Create Release
+    #     if: steps.check_notarization.outputs.status == 'success'
+    #     run: |
+    #       echo "Creating a release..."
+    #       VERSION=$(git rev-parse --short HEAD)
+    #       gh release create "v1.0.0-$VERSION" ./artifacts/* --title "Release v0.10.4-$VERSION" --notes "Notarization succeeded. This is the release for version v1.0.0-$VERSION."

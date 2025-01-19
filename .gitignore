@@ -11,6 +11,8 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+*.log
+
 # Dependency directories (remove the comment below to include it)
 # vendor/
 .DS_Store
@@ -19,7 +21,8 @@
 dist
 ui
 ^ui/index.html
-tests/data/*/*
+tests/data/*
+!tests/data/assets
 debug.log
 yao-test
 dev.sh
@@ -27,3 +30,15 @@ logs
 logs/application.log
 yao-arm64
 tests/db/yao.db
+env.*.sh
+xgen/v0.9/*
+xgen/v1.0/*
+!xgen/v0.9/index.html
+!xgen/v1.0/index.html
+!xgen/v1.0/umi.js
+!xgen/v1.0/layouts__index.async.js
+!pipe/ui
+*-unit-test
+docker/build/test
+db
+*.sh

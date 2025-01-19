@@ -4,20 +4,34 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yaoapp/gou/kv"
+	"github.com/yaoapp/gou/store"
 	"github.com/yaoapp/yao/config"
+	"github.com/yaoapp/yao/connector"
+	"github.com/yaoapp/yao/test"
 )
 
 func TestLoad(t *testing.T) {
+	test.Prepare(t, config.Conf)
+	defer test.Clean()
+	loadConnectors(t)
+
 	Load(config.Conf)
-	LoadFrom("not a path", "404.")
 	check(t)
 }
 
 func check(t *testing.T) {
-	keys := []string{}
-	for key := range kv.Pools {
-		keys = append(keys, key)
+	ids := map[string]bool{}
+	for id := range store.Pools {
+		ids[id] = true
 	}
-	assert.Equal(t, 1, len(keys))
+	assert.True(t, ids["cache"])
+	assert.True(t, ids["data"])
+	assert.True(t, ids["share"])
+}
+
+func loadConnectors(t *testing.T) {
+	err := connector.Load(config.Conf)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

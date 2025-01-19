@@ -2,26 +2,34 @@ package importer
 
 import (
 	jsoniter "github.com/json-iterator/go"
-	"github.com/yaoapp/gou"
+	"github.com/yaoapp/gou/process"
 	"github.com/yaoapp/kun/exception"
 )
 
 func init() {
+
 	// 注册处理器
-	gou.RegisterProcessHandler("xiang.import.Run", ProcessRun)
-	gou.RegisterProcessHandler("xiang.import.Data", ProcessData)
-	gou.RegisterProcessHandler("xiang.import.Setting", ProcessSetting)
-	gou.RegisterProcessHandler("xiang.import.DataSetting", ProcessDataSetting)
-	gou.RegisterProcessHandler("xiang.import.Mapping", ProcessMapping)
-	gou.RegisterProcessHandler("xiang.import.MappingSetting", ProcessMappingSetting)
+	process.Register("xiang.import.Run", ProcessRun)                       // deprecated → yao.import.Run
+	process.Register("xiang.import.Data", ProcessData)                     // deprecated → yao.import.Data
+	process.Register("xiang.import.Setting", ProcessSetting)               // deprecated → yao.import.Setting
+	process.Register("xiang.import.DataSetting", ProcessDataSetting)       // deprecated → yao.import.DataSetting
+	process.Register("xiang.import.Mapping", ProcessMapping)               // deprecated → yao.import.Mapping
+	process.Register("xiang.import.MappingSetting", ProcessMappingSetting) // deprecated → yao.import.MappingSetting
+
+	process.Alias("xiang.import.Run", "yao.import.Run")
+	process.Alias("xiang.import.Data", "yao.import.Data")
+	process.Alias("xiang.import.Setting", "yao.import.Setting")
+	process.Alias("xiang.import.DataSetting", "yao.import.DataSetting")
+	process.Alias("xiang.import.Mapping", "yao.import.Mapping")
+	process.Alias("xiang.import.MappingSetting", "yao.import.MappingSetting")
 }
 
 // ProcessRun xiang.import.Run
 // 导入数据
-func ProcessRun(process *gou.Process) interface{} {
+func ProcessRun(process *process.Process) interface{} {
 	process.ValidateArgNums(3)
 	name := process.ArgsString(0)
-	imp := Select(name)
+	imp := Select(name).WithSid(process.Sid)
 	filename := process.ArgsString(1)
 	src := Open(filename)
 	defer src.Close()
@@ -31,10 +39,10 @@ func ProcessRun(process *gou.Process) interface{} {
 
 // ProcessSetting xiang.import.Setting
 // 导入配置选项
-func ProcessSetting(process *gou.Process) interface{} {
+func ProcessSetting(process *process.Process) interface{} {
 	process.ValidateArgNums(1)
 	name := process.ArgsString(0)
-	imp := Select(name)
+	imp := Select(name).WithSid(process.Sid)
 	return map[string]interface{}{
 		"mappingPreview": imp.Option.MappingPreview,
 		"dataPreview":    imp.Option.DataPreview,
@@ -45,10 +53,10 @@ func ProcessSetting(process *gou.Process) interface{} {
 
 // ProcessData xiang.import.Data
 // 数据预览
-func ProcessData(process *gou.Process) interface{} {
+func ProcessData(process *process.Process) interface{} {
 	process.ValidateArgNums(5)
 	name := process.ArgsString(0)
-	imp := Select(name)
+	imp := Select(name).WithSid(process.Sid)
 
 	filename := process.ArgsString(1)
 	src := Open(filename)
@@ -63,19 +71,19 @@ func ProcessData(process *gou.Process) interface{} {
 
 // ProcessDataSetting xiang.import.DataSetting
 // 数据预览表格配置
-func ProcessDataSetting(process *gou.Process) interface{} {
+func ProcessDataSetting(process *process.Process) interface{} {
 	process.ValidateArgNums(1)
 	name := process.ArgsString(0)
-	imp := Select(name)
+	imp := Select(name).WithSid(process.Sid)
 	return imp.DataSetting()
 }
 
 // ProcessMapping xiang.import.Mapping
 // 字段映射预览
-func ProcessMapping(process *gou.Process) interface{} {
+func ProcessMapping(process *process.Process) interface{} {
 	process.ValidateArgNums(2)
 	name := process.ArgsString(0)
-	imp := Select(name)
+	imp := Select(name).WithSid(process.Sid)
 
 	filename := process.ArgsString(1)
 	src := Open(filename)
@@ -85,10 +93,10 @@ func ProcessMapping(process *gou.Process) interface{} {
 
 // ProcessMappingSetting xiang.import.MappingSetting
 // 字段映射表格配置
-func ProcessMappingSetting(process *gou.Process) interface{} {
+func ProcessMappingSetting(process *process.Process) interface{} {
 	process.ValidateArgNums(2)
 	name := process.ArgsString(0)
-	imp := Select(name)
+	imp := Select(name).WithSid(process.Sid)
 
 	filename := process.ArgsString(1)
 	src := Open(filename)

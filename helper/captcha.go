@@ -1,18 +1,23 @@
 package helper
 
 import (
-	"errors"
-	"image/color"
+	"bytes"
+	"encoding/base64"
+	"time"
 
-	"github.com/mojocn/base64Captcha"
-	"github.com/yaoapp/gou"
+	"github.com/dchest/captcha"
+	"github.com/yaoapp/gou/process"
 	"github.com/yaoapp/kun/any"
 	"github.com/yaoapp/kun/exception"
 	"github.com/yaoapp/kun/log"
 	"github.com/yaoapp/kun/maps"
 )
 
-var captchaStore = base64Captcha.DefaultMemStore
+var store = captcha.NewMemoryStore(1024, 10*time.Minute)
+
+func init() {
+	captcha.SetCustomStore(store)
+}
 
 // CaptchaOption 验证码配置
 type CaptchaOption struct {
@@ -29,7 +34,7 @@ func NewCaptchaOption() CaptchaOption {
 	return CaptchaOption{
 		Width:      240,
 		Height:     80,
-		Length:     4,
+		Length:     6,
 		Lang:       "zh",
 		Background: "#FFFFFF",
 	}
@@ -47,120 +52,68 @@ func CaptchaMake(option CaptchaOption) (string, string) {
 	}
 
 	if option.Length == 0 {
-		option.Length = 4
+		option.Length = 6
 	}
 
 	if option.Lang == "" {
 		option.Lang = "zh"
 	}
 
-	var driver base64Captcha.Driver
+	id := captcha.NewLen(option.Length)
+	var data []byte
+	var buff = bytes.NewBuffer(data)
 	switch option.Type {
+
 	case "audio":
-		driver = base64Captcha.NewDriverAudio(option.Length, option.Lang)
-		break
-	case "math":
-		background := captchaBackground(option.Background)
-		driver = base64Captcha.NewDriverMath(
-			option.Height, option.Width, 3,
-			base64Captcha.OptionShowHollowLine, background,
-			base64Captcha.DefaultEmbeddedFonts, []string{},
-		)
-		break
-	default:
-		driver = base64Captcha.NewDriverDigit(
-			option.Height, option.Width, 5,
-			0.7, 80,
-		)
-		break
-	}
-
-	c := base64Captcha.NewCaptcha(driver, captchaStore)
-	id, content, err := c.Generate()
-	if err != nil {
-		exception.New("生成验证码出错 %s", 500, err).Throw()
-	}
-
-	// 打印日志
-	log.Debug("图形/音频 ID:%s 验证码:%s", id, captchaStore.Get(id, false))
-
-	return id, content
-}
-
-// CaptchaValidate 校验验证码
-func CaptchaValidate(id string, value string) bool {
-	return captchaStore.Verify(id, value, true)
-}
-
-func captchaBackground(s string) *color.RGBA {
-	if s == "" {
-		s = "#555555"
-	}
-	bg, err := captchaParseHexColorFast(s)
-	if err != nil {
-		exception.New("背景色格式错误 %s", 400, s).Throw()
-	}
-	return &bg
-}
-
-func captchaParseHexColorFast(s string) (c color.RGBA, err error) {
-	c.A = 0xff
-
-	if s[0] != '#' {
-		return c, errors.New("invalid format")
-	}
-
-	hexToByte := func(b byte) byte {
-		switch {
-		case b >= '0' && b <= '9':
-			return b - '0'
-		case b >= 'a' && b <= 'f':
-			return b - 'a' + 10
-		case b >= 'A' && b <= 'F':
-			return b - 'A' + 10
+		err := captcha.WriteAudio(buff, id, option.Lang)
+		if err != nil {
+			exception.New("make audio captcha error: %s", 500, err).Throw()
 		}
-		err = errors.New("invalid format")
-		return 0
+		content := "data:audio/mp3;base64," + base64.StdEncoding.EncodeToString(buff.Bytes())
+		log.Debug("ID:%s Audio Captcha:%s", id, toString(store.Get(id, false)))
+		return id, content
+
+	default:
+		err := captcha.WriteImage(buff, id, option.Width, option.Height)
+		if err != nil {
+			exception.New("make image captcha error: %s", 500, err).Throw()
+		}
+
+		content := "data:image/png;base64," + base64.StdEncoding.EncodeToString(buff.Bytes())
+		log.Debug("ID:%s Image Captcha:%s", id, toString(store.Get(id, false)))
+		return id, content
 	}
 
-	switch len(s) {
-	case 7:
-		c.R = hexToByte(s[1])<<4 + hexToByte(s[2])
-		c.G = hexToByte(s[3])<<4 + hexToByte(s[4])
-		c.B = hexToByte(s[5])<<4 + hexToByte(s[6])
-	case 4:
-		c.R = hexToByte(s[1]) * 17
-		c.G = hexToByte(s[2]) * 17
-		c.B = hexToByte(s[3]) * 17
-	default:
-		err = errors.New("invalid format")
-	}
-	return
 }
 
-// ProcessCaptchaValidate xiang.helper.CaptchaValidate 校验图形/音频验证码
-func ProcessCaptchaValidate(process *gou.Process) interface{} {
+// CaptchaValidate Validate the captcha
+func CaptchaValidate(id string, code string) bool {
+	return captcha.VerifyString(id, code)
+}
+
+// ProcessCaptchaValidate xiang.helper.CaptchaValidate image/audio captcha
+func ProcessCaptchaValidate(process *process.Process) interface{} {
 	process.ValidateArgNums(2)
 	id := process.ArgsString(0)
 	code := process.ArgsString(1)
 	if code == "" {
-		exception.New("请输入验证码", 400).Throw()
+		exception.New("Please enter the captcha.", 400).Throw()
 		return false
 	}
 	if !CaptchaValidate(id, code) {
-		exception.New("验证码不正确", 400).Throw()
+		exception.New("Invalid captcha.", 400).Throw()
 		return false
 	}
 	return true
 }
 
-// ProcessCaptcha xiang.helper.Captcha 校验图形/音频验证码
-func ProcessCaptcha(process *gou.Process) interface{} {
+// ProcessCaptcha xiang.helper.Captcha image/audio captcha
+func ProcessCaptcha(process *process.Process) interface{} {
 	process.ValidateArgNums(1)
 	option := CaptchaOption{
 		Width:      any.Of(process.ArgsURLValue(0, "width", "240")).CInt(),
 		Height:     any.Of(process.ArgsURLValue(0, "height", "80")).CInt(),
-		Length:     any.Of(process.ArgsURLValue(0, "height", "4")).CInt(),
+		Length:     any.Of(process.ArgsURLValue(0, "length", "6")).CInt(),
 		Type:       process.ArgsURLValue(0, "type", "math"),
 		Background: process.ArgsURLValue(0, "background", "#FFFFFF"),
 		Lang:       process.ArgsURLValue(0, "lang", "zh"),
@@ -170,4 +123,12 @@ func ProcessCaptcha(process *gou.Process) interface{} {
 		"id":      id,
 		"content": content,
 	}
+}
+
+func toString(digits []byte) string {
+	var buf bytes.Buffer
+	for _, d := range digits {
+		buf.WriteByte(d + '0')
+	}
+	return buf.String()
 }

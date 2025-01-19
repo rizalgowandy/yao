@@ -1,124 +1,51 @@
-<p align="center">
-    <h1 align="center">YAO</h1>
-</p>
+## What is Yao?
 
-<p align="center">
-  <a aria-label="website" href="https://yaoapps.com" target="_blank">
-    Website
-  </a>
-  ·
-  <a aria-label="producthunt" href="https://www.producthunt.com/posts/yao-app-engine" target="_blank">
-    Producthunt
-  </a>
-  ·
-  <a aria-label="twitter" href="https://twitter.com/YaoApp" target="_blank">
-    Twitter
-  </a>
-  ·
-  <a aria-label="slack" href="https://join.slack.com/t/yaoapps/shared_invite/zt-13dm0cwvo-R9Q8xFGbrLZUffeygm9tXQ" target="_blank">
-    Slack
-  </a>
-</p>
+Yao is an all-in-one application engine that enables developers to create web apps, REST APIs, business applications, and more, with AI as a development partner.
 
-<p align="center">
-  <a aria-label="UnitTest" href="https://github.com/YaoApp/yao/actions/workflows/unit-test.yml" target="_blank">
-    <img src="https://github.com/YaoApp/yao/actions/workflows/unit-test.yml/badge.svg">
-  </a>
-  <a aria-label="codecov" href="https://codecov.io/gh/YaoApp/yao" target="_blank">
-    <img src="https://codecov.io/gh/YaoApp/yao/branch/main/graph/badge.svg?token=294Y05U71J">
-  </a>
-  <a aria-label="Go Report Card" href="https://goreportcard.com/report/github.com/yaoapp/yao" target="_blank">
-    <img src="https://goreportcard.com/badge/github.com/yaoapp/yao">
-  </a>
-  <a aria-label="Go Reference" href="https://pkg.go.dev/github.com/yaoapp/yao" target="_blank">
-    <img src="https://pkg.go.dev/badge/github.com/yaoapp/yao.svg">
-  </a>
-</p>
+Yao lets you create apps using AI, a visual interface, or by writing them yourself. Its DSL (Domain-Specific Language) is easy to read and write, and it works well with AI. With full programming capabilities and a single command-line tool to handle everything, you can switch smoothly between manual coding and AI assistance, making web app development fast and flexible.
 
-![intro](docs/1.intro.png)
+**Quick Links:**
 
-[中文介绍](README.zh-CN.md)
+**🏠 Homepage:** [https://yaoapps.com](https://yaoapps.com)
 
-## Demo
+**🚀 Quick Start:** [https://yaoapps.com/docs/documentation/en-us/getting-started](https://yaoapps.com/docs/documentation/en-us/getting-started#quickstart)
 
-### Customer Relationship Management System
+**📚 Documentation:** [https://yaoapps.com/docs](https://yaoapps.com/docs)
 
-A Customer Relationship Management System developed by Yao.
+**✨ Why Yao?** [https://yaoapps.com/docs/why-yao](https://yaoapps.com/docs/documentation/en-us/getting-started/why-yao)
 
-[https://demo-crm.yaoapps.com](https://demo-crm.yaoapps.com/xiang/login/admin?autoLogin=true)
+## Features
 
-### Intelligent warehouse management system
+Yao is effective in both human and machine programming, with each being independent, allowing for seamless switching between the two.
 
-An example of cloud + edge IoT application, an unattended intelligent warehouse management system that supports face recognition and RFID.
+### 🔮 AI First
 
-[https://demo-wms.yaoapps.com](https://demo-wms.yaoapps.com/xiang/login/admin?autoLogin=true)
+We have designed a human-machine-friendly DSL (Domain-Specific Language) that makes both AI-generated and manually written code more efficient, enabling easy transitions between the two.
 
-## Introduce
+Typically, AI generates the initial code, and developers make modifications, significantly boosting development efficiency. In practice, AI can handle 80% to 90% of the work, allowing developers to focus on the remaining 10% to 20%.
 
-**Yao allows developers to create web services by processes.** Yao is a low-code engine that creates a database model, writes API services, and describes dashboard interface just by JSON for web & hardware, no code, and 10x productivity.
+### 🔮 All-in-One
 
-Yao is based on the **flow-based** programming idea, developed in the **Go** language, and supports multiple ways to expand the data stream processor. This makes Yao extremely versatile, which can replace programming languages ​​in most scenarios, and is 10 times more efficient than traditional programming languages ​​in terms of reusability and coding efficiency; application performance and resource ratio Better than **PHP**, **JAVA** and other languages.
+Yao is an all-in-one solution for web development, requiring no additional packages or toolchain dependencies. It ships as a single executable file that includes everything you need to get started.
 
-Yao has a built-in data management system. By writing **JSON** to describe the interface layout, 90% of the common interface interaction functions can be realized. It is especially suitable for quickly making various management background, CRM, ERP and other internal enterprise systems. Special interactive functions can also be implemented by writing extension components or HTML pages. The built-in management system is not coupled with Yao, and any front-end technologies such as **VUE** and **React** can be used to implement the management interface.
+This greatly reduces the complexity of interacting with AI, significantly improving both the efficiency and quality of the generated code. It also eliminates many unnecessary tasks, allowing developers to focus on more important aspects.
 
-## Install
+### 🔮 Native TypeScript Support
 
-Run the script under terminal: (MacOS/Linux)
+Yao includes a built-in V8 engine with TypeScript support, allowing direct code execution and providing hundreds of APIs for databases, files, caching, and more, with multiple ways to add extensions.
 
-```bash
-curl -fsSL https://website.yaoapps.com/install.sh | bash
-```
+Yao offers comprehensive programming capabilities, so you don’t have to worry about being unable to implement certain features.
 
-For Windows users, please refer to the Installation and Debugging chapter: [Installation and debugging](https://yaoapps.com/en-US/doc/a.Introduction/b.Install)
+### 🔮 Multiple Coding Approaches
 
-## Getting Started
+Combine AI-generated code, visual editing, and manual coding within the same project, with generated code that is easy to read and manually modify.
 
-### Step 1: Create a project
+Once you understand how Yao works and its DSL, you can easily develop a code generator or AI agent tailored to your business needs.
 
-Create a new project directory, enter the project directory, and run the `yao init` command to create a blank Yao application.
+### 🔮 Serverless
 
-```bash
-mkdir -p /data/crm # create project directory
-cd /data/crm # Enter the project directory
-yao init # run the initializer
-```
+Launch in seconds with built-in cloud functions and API gateways to easily create server-side apps. Integrate seamlessly with the DevOps ecosystem for one-click deployment.
 
-After the command runs successfully, the `app.json file` , `db`, `ui` , `data` and other directories will be created
+### 🔮 Edge Devices Support
 
-```bash
-├── data # Used to store files generated by the application, such as pictures, PDFs, etc.
-├── db # Used to store SQLite database files
-│ └── yao.db
-└── ui # The static file server file directory, where custom front-end products can be placed. The files in this directory can be accessed through http://host:port/filename .
-└── app.json # Application configuration file, used to define the application name, etc.
-```
-
-### Step 2: Create the data table
-
-Use the `yao migrate` command to create the data table, open the command line terminal, **run in the project root directory**:
-
-```bash
-yao migrate
-```
-
-initialization menu
-
-```bash
-yao run flows.setmenu
-```
-
-### Step 3: Start the service
-
-Open a command line terminal, **run in the project root directory**:
-
-```bash
-yao start
-```
-
-1. Open a browser, visit `https://127.0.0.1:5099/xiang/login/admin`,
-
-2. Enter the default username: `xiang@iqka.com`, password: `A123456p+`
-
-## About Yao
-
-Yao's name is derived from the Chinese character **yao (yáo)**, the basic symbol that makes up the Eight Trigrams. The Eight Trigrams is a symbol system created by the ancient god Fuxi after observing and summarizing the laws of nature, which can refer to everything. Yao has two states of yin and yang, like 0 and 1. The transformation of yin and yang of Yao drives the replacement of Eight Trigrams, so as to summarize and record the development law of things.
+Yao apps also support running on edge devices equipped with arm64 or x64 chips, suitable for various scenarios in IoT applications.
